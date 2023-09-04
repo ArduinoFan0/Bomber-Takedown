@@ -40,6 +40,8 @@ boom2_millis = 0
 plane_left = True
 score = 0
 scrnsize = 1.0
+pause_pressed = False
+old_pause_pressed = False
 
 #constants
 friction = 0.69
@@ -84,6 +86,13 @@ def start_space():
 def end_space():
     global space_pressed
     space_pressed = False
+def start_p():
+    global pause_pressed
+    pause_pressed = True
+def end_p():
+    global pause_pressed
+    pause_pressed = False
+
 def tower(x=int, y=int, width=int, height=int, floors=int, health=int, gunradius=20, gunlength=70, colx=None, coly=None):
     global laser_x, laser_y, scrnsize
     trueheight = height / floors
@@ -182,8 +191,10 @@ def init():
     s.onkeyrelease(end_down, "Down")
     s.onkeyrelease(end_left, "Left")
     s.onkeyrelease(end_right, "Right")
-    s.onkeypress(start_space, " ")
-    s.onkeyrelease(end_space, " ")
+    s.onkeypress(start_space, "space")
+    s.onkeyrelease(end_space, "space")
+    s.onkeypress(start_p, "p")
+    s.onkeyrelease(end_p, "p")
     s.onclick(s.listen())
     t.addshape("plane", ( (0,-2),(1,0),(3,0),(2,1),(1,1),(0, 2),(0,1),(-1,1),(-2,3),(-2,1),(-1,0),(0,0),(0,-2)) )
     t.addshape("plane_right", ( (0,-2),(-1,0),(-3,0),(-2,1),(-1,1),(0, 2),(0,1),(1,1),(2,3),(2,1),(1,0),(0,0),(0,-2)) )
@@ -195,7 +206,7 @@ def init():
 def main():
     global xvel, yvel, xthrust, ythrust, friction, space_pressed, state, millis, smillis, laser_x, laser_y, bomb_x, bomb_y, tower_1, tower_2, tower_3, laser_on, smillis2
     global bomb_placex, plane_x, plane_y, bomb_xvel, plane_yvel, gameover_cause, rep, tower_floors, old_space_pressed, boom1_x, boom1_y, boom2_x, boom2_y, boom1_millis
-    global boom2_millis, plane_left, score, scrnsize
+    global boom2_millis, plane_left, score, scrnsize, pause_pressed, old_pause_pressed
     scrnsize = min(t.window_width() / 700, t.window_height() / 650)
     t.ht()
     t.shapesize(round(10 * scrnsize), round(10 * scrnsize), round(4 * scrnsize))
@@ -248,6 +259,7 @@ you 37% If your reputation reaches 0, it's
 game over. Try to score as many points as
 possible! Oh and just so you know, you press
 the arrows to aim and space to shoot.
+You can press P to pause.
 High scores are not saved.
 
 Press space to continue!
@@ -256,7 +268,22 @@ Press space to continue!
             old_space_pressed = False
         if space_pressed and not old_space_pressed:
             state = "game"
+    elif state == "pause":
+        t.goto(0,0)
+        t.write("Paused", align="center", font=("Courier New", round(20 * scrnsize), "normal"))
+        t.goto(0,-20)
+        t.write("Press P again to resume.", align="center", font=("Courier New", round(12 * scrnsize), "normal"))
+        if not pause_pressed:
+            old_pause_pressed = False
+        if pause_pressed and not old_pause_pressed:
+            state = "game"
+            old_pause_pressed = True
     elif state == "game":
+        if not pause_pressed:
+            old_pause_pressed = False
+        if pause_pressed and not old_pause_pressed:
+            state = "pause"
+            old_pause_pressed = True
         colliding_1 = tower(-250, -300, 75, 250, tower_floors, tower_1, colx = bomb_x, coly = bomb_y)
         colliding_2 = tower(-50, -300, 75, 280, tower_floors, tower_2, colx = bomb_x, coly = bomb_y)
         colliding_3 = tower(200, -300, 75, 250, tower_floors, tower_3, colx = bomb_x, coly = bomb_y)
